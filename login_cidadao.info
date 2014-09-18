@@ -1,0 +1,4 @@
+name = Login cidadão
+description = Implementa o Login cidadão
+
+core = 7.x
