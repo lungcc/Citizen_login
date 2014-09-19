@@ -2,7 +2,6 @@ DrupalLoginCidadao
 ==================
 
 Modulo de drupal implementando o login cidadão
->>>>>>> 8a783ec2da9efb6e79eab17b2983c9e106317e7f
 
 
 Dados de teste
