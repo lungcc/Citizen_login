@@ -134,3 +134,24 @@ function login_cidadao_block_view($delta = '') {
 
   return $block;
 }
+
+/**
+ * Implements hook_form_alter().
+ */
+function login_cidadao_form_user_login_alter(&$form, &$form_state, $form_id) {
+  //var_dump($form);
+
+  $form['actions']['login-cidadao'] = array(
+    '#type'   => 'submit',
+    '#value'  => t('Login Cidadão'),
+    '#submit' => array('login_cidadao_connect'),
+    '#limit_validation_errors' => array(),
+  );
+
+  $link = base_path() . 'user/login-cidadao/connect';
+  $form['login-cidadao-link'] = array(
+    '#markup' => '<a href="'.$link.'">Login Cidadão</a>',
+  );
+
+  var_dump($form);
+}
