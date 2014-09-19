@@ -31,6 +31,8 @@ function login_cidadao_menu() {
  * Page constructor : Função para conectar o usuário.
  */
 function login_cidadao_connect() {
+
+
   if (user_is_logged_in()) {
     return MENU_ACCESS_DENIED;
   }
@@ -39,7 +41,7 @@ function login_cidadao_connect() {
   $client->debug = 1;
   $client->debug_http = 1;
   $client->server = 'Meu';
-  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/user/login-cidadao/connect';
+  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . base_path() . 'user/login-cidadao/connect';
 
   $client->client_id = variable_get('login_cidadao_client_id');
 
@@ -54,6 +56,9 @@ function login_cidadao_connect() {
   // API Permissions.
   $client->scope = 'id username full_name name cpf birthdate email city picture public_profile voter_registration badges country uf city adress adress_number adress_complement rgs';
 
+
+  var_dump($client);
+  
   if (($success = $client->Initialize())) {
     if (($success = $client->Process())) {
       if (strlen($client->authorization_error)) {
@@ -66,6 +71,7 @@ function login_cidadao_connect() {
         ), $user_rs);
 
         $user = login_cidadao_create_user($user_rs);
+        dpm($user);
         // Redireciona para página de edição de perfil.
         drupal_goto("user/{$user->uid}/edit");
       }

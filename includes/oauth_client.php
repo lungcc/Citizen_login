@@ -296,7 +296,8 @@ class oauth_client_class
   </variable>
 {/metadocument}
 */
-  var $configuration_file = 'http://localhost/drupal/sites/all/modules/custom/login_cidadao/oauth_configuration.json';
+  //var $configuration_file = 'http://localhost/drupal/sites/all/modules/custom/login_cidadao/oauth_configuration.json';
+  var $configuration_file = 'http://localhost/d7/sites/all/modules/login_cidadao/oauth_configuration.json';
 
 /*
 {metadocument}
