@@ -31,15 +31,15 @@ function login_cidadao_menu() {
  * Page constructor : Função para conectar o usuário.
  */
 function login_cidadao_connect() {
-  // if (!user_is_logged_in()) {
-  //   return MENU_ACCESS_DENIED;
-  // }
+  if (user_is_logged_in()) {
+    return MENU_ACCESS_DENIED;
+  }
 
   $client = new oauth_client_class();
   $client->debug = 1;
   $client->debug_http = 1;
   $client->server = 'Meu';
-  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . dirname(strtok($_SERVER['REQUEST_URI'], '?')) . '/user/login-cidadao/connect';
+  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/user/login-cidadao/connect';
 
   $client->client_id = variable_get('login_cidadao_client_id');
 
@@ -48,7 +48,7 @@ function login_cidadao_connect() {
   $client->client_secret = variable_get('login_cidadao_app_secret');
 
   if (strlen($client->client_id) == 0 || strlen($client->client_secret) == 0) {
-    die('Please go to Meu RS Apps page https://meu.rs.gov.br/dev , ' . 'create an application, and in the line ' . $application_line . ' set the client_id to Consumer key and client_secret with Consumer secret. ' . 'The Callback URL must be ' . $client->redirect_uri . ' If you want to post to ' . 'the user timeline, make sure the application you create has write permissions');
+    return t('Please go to Meu RS Apps page https://meu.rs.gov.br/dev , ' . 'create an application, and in the line  @application_line set the client_id to Consumer key and client_secret with Consumer secret. The Callback URL must be @redirect_uri If you want to post to ' . 'the user timeline, make sure the application you create has write permissions', array('@application_line' => $application_line, ' @redirect_uri' => $client->redirect_uri));
   }
 
   // API Permissions.
@@ -65,25 +65,41 @@ function login_cidadao_connect() {
             'FailOnAccessError' => true
         ), $user_rs);
 
-        // $new_user = array(
-        //   'name' => $user_rs->username,
-        //   'mail' => $user_rs->email,
-        //   'init' => $user_rs->email,
-        //   'access' => REQUEST_TIME,
-        //   'status' => 1,
-        // );
-
-        // $account = user_save(NULL, $new_user);
-        // dpm($account);
-
-        // global $user;
-        // $user = $account;
+        $user = login_cidadao_create_user($user_rs);
+        // Redireciona para página de edição de perfil.
+        drupal_goto("user/{$user->uid}/edit");
       }
     }
-    // $success = $client->Finalize($success);
   }
-  // drupal_goto('<front>');
-  return '';
+}
+
+/**
+ * This function create new user.
+ *
+ * @param object $user_rs
+ *   Login cidadão object.
+ */
+function login_cidadao_create_user($user_rs) {
+  $password = user_password();
+  // User data.
+  $new_user = array(
+    'name' => $user_rs->username,
+    'mail' => $user_rs->email,
+    'init' => $user_rs->email,
+    'access' => REQUEST_TIME,
+    'status' => 1,
+    'pass' => $password,
+  );
+
+  // Save user.
+  $account = user_save(NULL, $new_user);
+  // Troca o usuário atual.
+  global $user;
+  $user = $account;
+
+  drupal_set_message(t('Your password is @pass. Please change this.', array('@pass' => $password)), 'warning');
+
+  return $account;
 }
 
 /**
