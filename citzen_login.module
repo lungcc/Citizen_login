@@ -40,8 +40,7 @@ function citzen_login_connect() {
   $client->debug = 1;
   $client->debug_http = 1;
   $client->server = 'Meu';
-  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/user/citzen-login/connect';
-
+  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . base_path() . 'user/citzen-login/connect';
   $client->client_id = variable_get('citzen_login_client_id');
 
   $application_line = __LINE__ - 1;
@@ -54,6 +53,9 @@ function citzen_login_connect() {
 
   // API Permissions.
   $client->scope = 'id username full_name name cpf birthdate email city picture public_profile voter_registration badges country uf city adress adress_number adress_complement rgs';
+
+
+  var_dump($client);
 
   if (($success = $client->Initialize())) {
     if (($success = $client->Process())) {
@@ -150,4 +152,14 @@ function citzen_login_create_user($user_rs) {
   drupal_set_message(t('Your password is @pass. Please change this.', array('@pass' => $password)), 'warning');
 
   return $account;
+}
+
+/*
+ * Implements hook_form_alter().
+ */
+function citzen_login_form_user_login_alter(&$form, &$form_state, $form_id) {
+  $btn = l(t('Citzen\'s Login'), 'user/citzen_login/connect', array('attributes' => array('class' => array('btn-citizen-login'))));
+  $form['citzen-login-link'] = array(
+    '#markup' => $btn,
+  );
 }
