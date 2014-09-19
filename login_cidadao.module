@@ -1,9 +1,12 @@
 <?php
+include_once 'includes/http.php';
+include_once 'includes/oauth_client.php';
 
 /**
  * Implements hook_menu().
  */
 function login_cidadao_menu() {
+  // Config page.
   $items['admin/config/people/login-cidadao'] = array(
     'title' => t('Login cidadão configurações'),
     'page callback' => 'drupal_get_form',
@@ -13,20 +16,121 @@ function login_cidadao_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
 
+  // Connect page.
+  $items['user/login-cidadao/connect'] = array(
+    'title' => t('Connect'),
+    'type' => MENU_NORMAL_ITEM,
+    'access callback' => TRUE,
+    'page callback' => 'login_cidadao_connect',
+  );
+
   return $items;
 }
 
+/**
+ * Page constructor : Função para conectar o usuário.
+ */
+function login_cidadao_connect() {
+  // if (!user_is_logged_in()) {
+  //   return MENU_ACCESS_DENIED;
+  // }
+
+  $client = new oauth_client_class();
+  $client->debug = 1;
+  $client->debug_http = 1;
+  $client->server = 'Meu';
+  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . dirname(strtok($_SERVER['REQUEST_URI'], '?')) . '/user/login-cidadao/connect';
+
+  $client->client_id = variable_get('login_cidadao_client_id');
+
+  $application_line = __LINE__ - 1;
+
+  $client->client_secret = variable_get('login_cidadao_app_secret');
+
+  if (strlen($client->client_id) == 0 || strlen($client->client_secret) == 0) {
+    die('Please go to Meu RS Apps page https://meu.rs.gov.br/dev , ' . 'create an application, and in the line ' . $application_line . ' set the client_id to Consumer key and client_secret with Consumer secret. ' . 'The Callback URL must be ' . $client->redirect_uri . ' If you want to post to ' . 'the user timeline, make sure the application you create has write permissions');
+  }
+
+  // API Permissions.
+  $client->scope = 'id username full_name name cpf birthdate email city picture public_profile voter_registration badges country uf city adress adress_number adress_complement rgs';
+
+  if (($success = $client->Initialize())) {
+    if (($success = $client->Process())) {
+      if (strlen($client->authorization_error)) {
+        $client->error = $client->authorization_error;
+        $success = false;
+      }
+      elseif (strlen($client->access_token)) {
+        $success = $client->CallAPI('https://meu.rs.gov.br/api/v1/person', 'GET', array(), array(
+            'FailOnAccessError' => true
+        ), $user_rs);
+
+        // $new_user = array(
+        //   'name' => $user_rs->username,
+        //   'mail' => $user_rs->email,
+        //   'init' => $user_rs->email,
+        //   'access' => REQUEST_TIME,
+        //   'status' => 1,
+        // );
+
+        // $account = user_save(NULL, $new_user);
+        // dpm($account);
+
+        // global $user;
+        // $user = $account;
+      }
+    }
+    // $success = $client->Finalize($success);
+  }
+  // drupal_goto('<front>');
+  return '';
+}
+
+/**
+ * Form constructor for login cidadao settings.
+ *
+ * @ingroup forms
+ */
 function login_cidadao_settings_form($form, &$form_state) {
+  // Client ID field.
   $form['login_cidadao_client_id'] = array(
     '#type' => 'textfield',
-    '#title' => t('Client id'),
+    '#title' => t('Client ID'),
     '#default_value' => variable_get('login_cidadao_client_id', NULL),
   );
+  // App Secret field.
   $form['login_cidadao_app_secret'] = array(
     '#type' => 'textfield',
-    '#title' => t('App secret'),
+    '#title' => t('App Secret'),
     '#default_value' => variable_get('login_cidadao_app_secret', NULL),
   );
 
   return system_settings_form($form);
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function login_cidadao_block_info() {
+  $blocks['login_cidadao'] = array(
+    'info' => t('Login cidadão'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function login_cidadao_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'login_cidadao' :
+      $block['content'] = l('Login cidadão', 'user/login-cidadao/connect');
+      break;
+  }
+
+  return $block;
 }
