@@ -5,32 +5,33 @@ include_once 'includes/oauth_client.php';
 /**
  * Implements hook_menu().
  */
-function login_cidadao_menu() {
+function citzen_login_menu() {
   // Config page.
-  $items['admin/config/people/login-cidadao'] = array(
-    'title' => t('Login cidadão configurações'),
+  $items['admin/config/people/citzen-login'] = array(
+    'title' => t('Citzen Login Settings'),
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('login_cidadao_settings_form'),
+    'page arguments' => array('citzen_login_settings_form'),
     'access arguments' => array('administer users'),
     'description' => 'Configurar configurações para login cidadão',
     'type' => MENU_NORMAL_ITEM,
   );
 
   // Connect page.
-  $items['user/login-cidadao/connect'] = array(
+  $items['user/citzen-login/connect'] = array(
     'title' => t('Connect'),
     'type' => MENU_NORMAL_ITEM,
     'access callback' => TRUE,
-    'page callback' => 'login_cidadao_connect',
+    'page callback' => 'citzen_login_connect',
   );
 
   return $items;
 }
 
+
 /**
  * Page constructor : Função para conectar o usuário.
  */
-function login_cidadao_connect() {
+function citzen_login_connect() {
   if (user_is_logged_in()) {
     return MENU_ACCESS_DENIED;
   }
@@ -39,13 +40,13 @@ function login_cidadao_connect() {
   $client->debug = 1;
   $client->debug_http = 1;
   $client->server = 'Meu';
-  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/user/login-cidadao/connect';
+  $client->redirect_uri = 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '/user/citzen-login/connect';
 
-  $client->client_id = variable_get('login_cidadao_client_id');
+  $client->client_id = variable_get('citzen_login_client_id');
 
   $application_line = __LINE__ - 1;
 
-  $client->client_secret = variable_get('login_cidadao_app_secret');
+  $client->client_secret = variable_get('citzen_login_app_secret');
 
   if (strlen($client->client_id) == 0 || strlen($client->client_secret) == 0) {
     return t('Please go to Meu RS Apps page https://meu.rs.gov.br/dev , ' . 'create an application, and in the line  @application_line set the client_id to Consumer key and client_secret with Consumer secret. The Callback URL must be @redirect_uri If you want to post to ' . 'the user timeline, make sure the application you create has write permissions', array('@application_line' => $application_line, ' @redirect_uri' => $client->redirect_uri));
@@ -65,7 +66,7 @@ function login_cidadao_connect() {
             'FailOnAccessError' => true
         ), $user_rs);
 
-        $user = login_cidadao_create_user($user_rs);
+        $user = citzen_login_create_user($user_rs);
         // Redireciona para página de edição de perfil.
         drupal_goto("user/{$user->uid}/edit");
       }
@@ -74,12 +75,61 @@ function login_cidadao_connect() {
 }
 
 /**
+ * Form constructor for login cidadao settings.
+ *
+ * @ingroup forms
+ */
+function citzen_login_settings_form($form, &$form_state) {
+  // Client ID field.
+  $form['citzen_login_client_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Client ID'),
+    '#default_value' => variable_get('citzen_login_client_id', NULL),
+  );
+  // App Secret field.
+  $form['citzen_login_app_secret'] = array(
+    '#type' => 'textfield',
+    '#title' => t('App Secret'),
+    '#default_value' => variable_get('citzen_login_app_secret', NULL),
+  );
+
+  return system_settings_form($form);
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function citzen_login_block_info() {
+  $blocks['citzen_login'] = array(
+    'info' => t('Citzen\'s Login'),
+    'cache' => DRUPAL_NO_CACHE,
+  );
+
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function citzen_login_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'citzen_login' :
+      $block['content'] = l(t('Citzen\'s Login'), 'user/citzen-login/connect');
+      break;
+  }
+
+  return $block;
+}
+
+/**
  * This function create new user.
  *
  * @param object $user_rs
  *   Login cidadão object.
  */
-function login_cidadao_create_user($user_rs) {
+function citzen_login_create_user($user_rs) {
   $password = user_password();
   // User data.
   $new_user = array(
@@ -100,53 +150,4 @@ function login_cidadao_create_user($user_rs) {
   drupal_set_message(t('Your password is @pass. Please change this.', array('@pass' => $password)), 'warning');
 
   return $account;
-}
-
-/**
- * Form constructor for login cidadao settings.
- *
- * @ingroup forms
- */
-function login_cidadao_settings_form($form, &$form_state) {
-  // Client ID field.
-  $form['login_cidadao_client_id'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Client ID'),
-    '#default_value' => variable_get('login_cidadao_client_id', NULL),
-  );
-  // App Secret field.
-  $form['login_cidadao_app_secret'] = array(
-    '#type' => 'textfield',
-    '#title' => t('App Secret'),
-    '#default_value' => variable_get('login_cidadao_app_secret', NULL),
-  );
-
-  return system_settings_form($form);
-}
-
-/**
- * Implements hook_block_info().
- */
-function login_cidadao_block_info() {
-  $blocks['login_cidadao'] = array(
-    'info' => t('Login cidadão'),
-    'cache' => DRUPAL_NO_CACHE,
-  );
-
-  return $blocks;
-}
-
-/**
- * Implements hook_block_view().
- */
-function login_cidadao_block_view($delta = '') {
-  $block = array();
-
-  switch ($delta) {
-    case 'login_cidadao' :
-      $block['content'] = l('Login cidadão', 'user/login-cidadao/connect');
-      break;
-  }
-
-  return $block;
 }
