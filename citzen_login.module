@@ -29,7 +29,7 @@ function citzen_login_menu() {
 
 
 /**
- * Page constructor : Função para conectar o usuário.
+ * Page constructor : Connect user function.
  */
 function citzen_login_connect() {
   if (user_is_logged_in()) {
@@ -52,10 +52,11 @@ function citzen_login_connect() {
   }
 
   // API Permissions.
-  $client->scope = 'id username full_name name cpf birthdate email city picture public_profile voter_registration badges country uf city adress adress_number adress_complement rgs';
+  $scope = array('id', 'username', 'picture', 'email');
+  // Call hook alter.
+  drupal_alter('citzen_login_scope', $scope);
 
-
-  var_dump($client);
+  $client->scope = implode(' ', $scope);
 
   if (($success = $client->Initialize())) {
     if (($success = $client->Process())) {
@@ -69,7 +70,7 @@ function citzen_login_connect() {
         ), $user_rs);
 
         $user = citzen_login_create_user($user_rs);
-        // Redireciona para página de edição de perfil.
+        // Redirect to edit profile
         drupal_goto("user/{$user->uid}/edit");
       }
     }
@@ -118,11 +119,22 @@ function citzen_login_block_view($delta = '') {
 
   switch ($delta) {
     case 'citzen_login' :
-      $block['content'] = l(t('Citzen\'s Login'), 'user/citzen-login/connect');
+      $block['content'] = theme('citzen_login_button');
       break;
   }
 
   return $block;
+}
+
+/**
+ * Implements hook_theme().
+ */
+function citzen_login_theme() {
+  return array(
+    'citzen_login_button' => array(
+      'function' => 'theme_citzen_login_button',
+    ),
+  );
 }
 
 /**
@@ -145,7 +157,7 @@ function citzen_login_create_user($user_rs) {
 
   // Save user.
   $account = user_save(NULL, $new_user);
-  // Troca o usuário atual.
+  // Change current user.
   global $user;
   $user = $account;
 
@@ -158,8 +170,17 @@ function citzen_login_create_user($user_rs) {
  * Implements hook_form_alter().
  */
 function citzen_login_form_user_login_alter(&$form, &$form_state, $form_id) {
-  $btn = l(t('Citzen\'s Login'), 'user/citzen_login/connect', array('attributes' => array('class' => array('btn-citizen-login'))));
+  $btn = theme('citzen_login_button');
   $form['citzen-login-link'] = array(
     '#markup' => $btn,
   );
+}
+
+/**
+ * Theme function for login button.
+ */
+function theme_citzen_login_button(&$variables) {
+  $btn = l(t('Citzen\'s Login'), 'user/citzen-login/connect', array('attributes' => array('class' => array('btn-citizen-login'))));
+
+  return $btn;
 }
