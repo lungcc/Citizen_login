@@ -70,7 +70,7 @@ function citzen_login_connect() {
         ), $user_rs);
 
         $user = citzen_login_create_user($user_rs);
-        // Redirect to edit profile
+        // Redirect to edit profile.
         drupal_goto("user/{$user->uid}/edit");
       }
     }
