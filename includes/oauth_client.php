@@ -296,7 +296,7 @@ class oauth_client_class
   </variable>
 {/metadocument}
 */
-var $configuration_file = 'http://localhost/drupal/sites/all/modules/custom/citzen_login/oauth_configuration.json';
+var $configuration_file = 'oauth_configuration.json';
 
 /*
 {metadocument}
@@ -876,6 +876,10 @@ var $configuration_file = 'http://localhost/drupal/sites/all/modules/custom/citz
 */
   var $oauth_username = '';
 
+  function __construct($configuration_file)
+  {
+    $this->configuration_file = $configuration_file;
+  }
 /*
 {metadocument}
   <variable>

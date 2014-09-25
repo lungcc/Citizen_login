@@ -5,6 +5,6 @@
  * @param array $scope
  *   API Scope in Citzen login.
  */
-function hook_citzen_login_scope_alter(&$scope) {
+function hook_citizen_login_scope_alter(&$scope) {
   // Your code here.
 }
