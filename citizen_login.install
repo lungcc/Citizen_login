@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * Implements hook_schema().
+ */
+function citizen_login_schema() {
+  $schema['citizen_login_users'] = array(
+    'description' => 'Save ID in citzen login and uid.',
+    'fields' => array(
+      'cid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+      'uid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ),
+    ),
+    'unique keys' => array(
+      'cid_uid' => array('cid', 'uid'),
+    ),
+    'foreign keys' => array(
+      'users' => array(
+        'table' => 'users',
+        'columns' => array('uid' => 'uid'),
+      ),
+    ),
+    'primary key' => array('cid'),
+  );
+
+  return $schema;
+}
+/**
+ * Implements hook_update_N().
+ */
+function citizen_login_update_7000() {
+  $schema = module_invoke('citizen_login', 'schema');
+  db_create_table('citizen_login_users', $schema['citizen_login_users']);
+}
