@@ -80,6 +80,8 @@ function citizen_login_connect() {
           drupal_goto("user/{$user->uid}/edit");
         }
         else {
+          drupal_set_message('User already exists', 'error');
+          drupal_goto('<front>');
           // Try reauthenticate user token?
 
           // Other things...
