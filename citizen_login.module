@@ -53,7 +53,15 @@ function citizen_login_connect() {
   }
 
   // API Permissions.
-  $scope = array('id', 'username', 'picture', 'email');
+  // Get scope and filter only to selected itens.
+  $citizen_login_scope = variable_get('citizen_login_scope', NULL);
+  foreach ($citizen_login_scope as $key => $value) {
+    if (!$value) {
+      unset($citizen_login_scope[$key]);
+    }
+  }
+  $scope = array_values($citizen_login_scope);
+  
   // Call hook alter.
   drupal_alter('citizen_login_scope', $scope);
 
@@ -109,6 +117,18 @@ function citizen_login_settings_form($form, &$form_state) {
     '#type' => 'textfield',
     '#title' => t('App Secret'),
     '#default_value' => variable_get('citizen_login_app_secret', NULL),
+  );
+  
+  // Scope to oauth
+  
+  // Actual full scope
+  $scope = array('id', 'username', 'full_name', 'name', 'cpf', 'birthdate', 'email', 'city', 'picture', 'public_profile', 'voter_registration', 'badges', 'country', 'uf', 'city', 'adress', 'adress_number', 'adress_complement', 'rgs');
+  
+  $form['citizen_login_scope'] = array (
+    '#type' => 'checkboxes',
+    '#title'  => t('Scope'),
+    '#options'  => drupal_map_assoc($scope),
+    '#default_value'  => variable_get('citizen_login_scope', NULL),
   );
 
   return system_settings_form($form);
