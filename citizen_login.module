@@ -70,9 +70,21 @@ function citizen_login_connect() {
             'FailOnAccessError' => true
         ), $user_rs);
 
-        $user = citizen_login_create_user($user_rs);
-        // Redirect to edit profile.
-        drupal_goto("user/{$user->uid}/edit");
+        // Verify if user exists before try to create new account.
+        $query = 'SELECT mail FROM users WHERE mail = :email';
+        $result = db_query($query, array(':email' => $user_rs->email));
+
+        if ($result->rowCount() == 0) {
+          $user = citizen_login_create_user($user_rs);
+          // Redirect to edit profile.
+          drupal_goto("user/{$user->uid}/edit");
+        }
+        else {
+          // Try reauthenticate user token?
+
+          // Other things...
+        }
+
       }
     }
   }
